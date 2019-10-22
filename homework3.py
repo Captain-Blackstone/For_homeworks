@@ -15,7 +15,7 @@ def the_lone_task():
     strongest["Cove"] = "Haspid"
     strongest.pop("Conflux") # They often ban conflux =(
     print("Hey, I always wondered, who is stronger, %s or %s?" % (strongest["Dungeon"], strongest["Rampart"]))
-    print("Let's give those creatures fuuny names")
+    print("Let's give those creatures funny names")
     for key, value in strongest.items():
         name = ""
         for letter in value:
