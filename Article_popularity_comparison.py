@@ -1,7 +1,6 @@
 import random
 import matplotlib.pyplot as plt
-print("""
-In case you've become interested in this file. I wrote an article on a Biomolecule site
+print(""" In case you've become interested in this file. I wrote an article on a Biomolecule site
 (here it is - https://biomolecula.ru/articles/kak-poniat-chto-vashi-geny-otbiraiut)
 And I am very curious, weather it is actually popular or not. Well, to measure that you could simply look at the number 
 of watchers. But I invented more pleasing metrics - that is number of users added my article to favirites divided by 
