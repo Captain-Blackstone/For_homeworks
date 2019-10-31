@@ -16,7 +16,7 @@ MY_FAVORITES = 7
 def comparator(their_favorites, their_watchers):
     y1 = [0 for i in range(40)]
     y2 = [0 for i in range(40)]
-    bin = [0, 0]
+    who_is_better = [0, 0]
     for i in range(1000):
         print("%i/1000" % i)
         f = 0
@@ -32,10 +32,10 @@ def comparator(their_favorites, their_watchers):
                 g += 1
         y2[g] += 1
         if f > g:
-            bin[0] += 1
+            who_is_better[0] += 1
         elif f < g:
-            bin[1] += 1
-    print("Probability of being better: ", bin[0]/(bin[0]+bin[1]))
+            who_is_better[1] += 1
+    print("Probability of being better: ", who_is_better[0]/(who_is_better[0]+who_is_better[1]))
     plt.bar(range(40), y1, color="red", alpha=0.5, label="my")
     plt.bar(range(40), y2, color="blue", alpha=0.5, label="theirs")
     plt.legend()
