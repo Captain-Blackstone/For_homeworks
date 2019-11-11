@@ -11,13 +11,18 @@ def flatten(lst):
     :return: list - a list without collections in it.
     """
     result = []
+    contains_list = False
     for element in lst:
         try:  # To be honest, this looks like cheat since we haven't learned it yet.
             # If there's more elegant way, tell me, please
             result += element
+            contains_list = True
         except TypeError:
             result.append(element)
-    return result
+    if contains_list:
+        return flatten(result)
+    else:
+        return result
 
 
 def fibo(num):
@@ -79,12 +84,12 @@ def moda(lst):
     :return: moda - the most frequent element(s)
     """
     # Warning. This doesn't seem to be elegant at all.
-    c = Counter(lst)
-    mx = maximum(list(c.values()))
+    c = Counter(lst) # returns a Counter object - like a dictionary, where keys are elements, and values are their counts
+    mx = maximum(list(c.values())) # returns a maximum number of elements
     modes = []
-    for key in c.keys():
-        if c[key] == mx:
-            modes.append(key)
+    for key in c.keys(): # for every element
+        if c[key] == mx: # if its count is maximum
+            modes.append(key) # append it in a list
     return tuple(modes)
 
 
@@ -95,9 +100,5 @@ def get(lst, ind):
     :param ind: int - aforementioned index. Boy, the word 'aforementioned' came in pretty handy.
     :return: the element with specified index
     """
-    return lst[ind] # Too simple, no?
-
-
-
-
+    return lst[ind] # Too easy, no?
 

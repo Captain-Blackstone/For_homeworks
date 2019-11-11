@@ -8,7 +8,7 @@ rate). The latter is 'death' of neutral or slightly advantageous mutation locate
 deleterious one (both effects take place because of limited recombination rate, so fates of closely located mutations
 become linked).
 It is commonly inferred, that background selection may be a reason of local decrease of diversity in genome. And this
-is what a cannot understand.
+is what I cannot understand.
 What is diversity?  It is quite intuitive. If there is only one allele in the locus, then diversity is extremely low.
 If we consider two alleles in the locus, diversity is maximum if their frequencies are equal (0.5:0.5), and minimum when
 one of them is rare and the other is nearly fixated (like 0.9999:0.0001).
@@ -68,6 +68,9 @@ def pmf_background(n, N, k, m):
     This function models background selection in one generation. See, background selection can be represented as random
     killing of members of population - you just think they gained a lethal mutation and died, and since this mutation
     knows nothing about genotype of the animal, it looks like death of random member of population.
+    UPD. I was very surprised to see that I derived the formula of hypergeometric distribution here.
+    https://en.wikipedia.org/wiki/Hypergeometric_distribution
+    And, of course, I was very proud of myself.
     :param n: int - number of mutants in the population
     :param N: int - population size
     :param k: int - number of mutants who will die due to background selection.
