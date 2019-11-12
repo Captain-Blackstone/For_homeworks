@@ -13,11 +13,11 @@ def flatten(lst):
     result = []
     contains_list = False
     for element in lst:
-        try:  # To be honest, this looks like cheat since we haven't learned it yet.
+        if type(element) in (list, tuple):  # To be honest, this looks like cheat since we haven't learned it yet.
             # If there's more elegant way, tell me, please
             result += element
             contains_list = True
-        except TypeError:
+        else:
             result.append(element)
     if contains_list:
         return flatten(result)
@@ -101,4 +101,3 @@ def get(lst, ind):
     :return: the element with specified index
     """
     return lst[ind] # Too easy, no?
-
