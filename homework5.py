@@ -15,13 +15,16 @@ print(templ_2.format("heroes 5", "heroes 3"))
 n = 1.6
 templ_3 = f"{castles[0]} produces {round(n)}-fold less units of 7-th level than {castles[-1]}. So they should be ' \
           f'{round(n)}-fold better, shouldn't they?"
-
+print(templ_3)
+print("Here is a castle list:")
+for element in castles:
+    print("%10s" % element, end="")
 
 boring, sisters_favourite, *other, imba = castles
 *last_ones, no_magic_suckers_1, no_magic_suckers_2 = other
 my_girlfriends_favourite, my_fathers_favouite, *tower_and_inferno = last_ones
 
-#comprehencions
+# comprehensions
 
 squares = [x**2 for x in range(11)]
 sums = [x+y for x in range(3) for y in range(5, 9)]
@@ -54,16 +57,16 @@ def binary_search(element, lst):
     lower_bound = 0
     previous_target = None
     while True:
-        target = int((upper_bound+lower_bound)/2)
-        # print(lower_bound, upper_bound, target, lst)
-        if lst[target] > element:
+        target = int((upper_bound+lower_bound)/2) # middle of a list that's left
+        if lst[target] > element: # if element is smaller, get rid of the bigger half
             upper_bound = target
-        elif lst[target] < element:
+        elif lst[target] < element: # if bigger - get rid of the smaller half
             lower_bound = target
         else:
-            return target
-        if target == previous_target:
+            return target # if equal - then found
+        if target == previous_target: # if bounds don't shift anymore - we've reached the end
             break
         previous_target = target
-    if lst[upper_bound] == element: # Not elegant. But couldn't create anything better.
+    if lst[upper_bound] == element: # Not elegant. But couldn't create anything better. That thing shows up because of
+        # rounding problem
         return upper_bound

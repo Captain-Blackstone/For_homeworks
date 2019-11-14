@@ -45,12 +45,12 @@ def components_of_connectedness(graph_list):
     """
     detected = {}
     current_component = 0
-    for node in graph_list.keys():
-        if node not in flatten(detected.values()):
-            current_component += 1
-            detected[current_component] = [node]
+    for node in graph_list.keys(): # walk through all the nodes
+        if node not in flatten(detected.values()): # if havent' seen that node previously (= found new component)
+            current_component += 1 # register a component
+            detected[current_component] = [node] # add node to "seen"
             nodes_to_check = graph_list[node]
-            while len(nodes_to_check) > 0:
+            while len(nodes_to_check) > 0: # walk through this node's neighbours and their neighbours and so on.
                 current = nodes_to_check[-1]
                 detected[current_component].append(current)
                 for every in graph_list[current]:
