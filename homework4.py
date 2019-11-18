@@ -57,7 +57,7 @@ def maximum(lst):
 def reverse(lst):
     """
     Returns a list in reversed order. This wasn't even difficult.
-    :param lst: list - not surprisingly, a list, whivh you want to revert
+    :param lst: list - not surprisingly, a list, which you want to revert
     :return: reversed list
     """
     return lst[::-1] # Yes, it was a difficult one.
