@@ -79,19 +79,19 @@ def Needleman_Wunsch(file, match=0, mismatch=1, gap=1):
     j = len(second)
     alignment = ["", ""]
     while not (i==0 and j ==0): # While haven't reached the upper left corner
-        diagonal = score_matrix[j-1][i-1]
-        left = score_matrix[j][i-1]
-        up = score_matrix[j-1][i]
+        diagonal = score_matrix[j-1][i-1] + match_mismatch(match, mismatch, i-1, j-1, first, second)
+        left = score_matrix[j][i-1] + gap
+        up = score_matrix[j-1][i] + gap
         if i == 0: # if reached left side, we just go straight up. Not very elegant.
             next_one = up
             diagonal = next_one + 1
             left = next_one + 1
-        elif j == 0: # if reached upper sid, just go straight left.
+        elif j == 0: # if reached upper side, just go straight left.
             next_one = left
             diagonal = next_one + 1
             up = next_one + 1
         else:
-            next_one = min(diagonal, left, up) # if inside matrix, chose a path according to the scores
+            next_one = min(diagonal, left, up) # if inside the matrix, choose a path according to the scores
         # Add a little piece to alignment. Notice, that initially it is a backward alignment, but I'll reverse it
         # at the end
         if diagonal == next_one:
