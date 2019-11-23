@@ -1,3 +1,7 @@
+# Hello, Sasha!
+# I hope your depression has come to an end. You're a really good and motivated teacher! Don't take too seriously
+# your problems with administration.
+
 def bubble_sort(lst):
     for i in range(len(lst)):
         print(lst)
@@ -7,7 +11,6 @@ def bubble_sort(lst):
                 already_sorted = False
                 lst[j], lst[j+1] = lst[j+1], lst[j]
         if already_sorted:
-            print("breaking")
             break
     return lst
 
@@ -17,19 +20,25 @@ bubble_sort(x)
 
 def find_ORFs(sequence):
     ORFs = []
-    for _ in range(3):
+    for iter in range(3): # we look in al 3 reading frames
         start, finish = None, None
-        seq = sequence[_:]
+        seq = sequence[iter:]
         for i in range(0, len(seq), 3):
             codon = seq[i:i+3]
             if codon == "ATG":
-                start = i
-            if not (start is None) and codon in {"TAG", "TAA", "TGA"}:
-                finish = i
-                break
-        if not(start is None) and finish:
-            ORFs.append((start, finish))
+                start = i # open an orf
+            if codon in {"TAG", "TAA", "TGA"} and not start is None: # If there is start and you encounter stop
+                finish = i+3
+                if i-start >=9: # if there are at least 4 codons
+                    # ATG NNN NNN TAA
+                    # 0           9
+                    # i-start = 9
+                    ORFs.append(seq[start:finish])
+                start = None # Close an orf anyways (even if it's too short)
     return ORFs
 
-sq = "ATGACTTAACCTAGCTAGTACGTACGTGTACACGATCGGTGCTAGCACTGTACAGTGTCATGACTACACGTGTACGTACACACATGTACACACATAAACTATCGCGGGATCTAACTTA"
-print(find_ORF(sq))
+sq = "ATG" \
+     "ACT" \
+     "CCT" \
+     "TAATGAAGCTAGTACGTACGTGTACACGATCGGTGCTAGCACTGTACAGTGTCATGACTACACGTGTACGTACTAACATGACATGTGATACACACATAAACTATCGCGGGATCTAACTTA"
+print(find_ORFs(sq))
