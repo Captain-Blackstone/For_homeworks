@@ -13,19 +13,20 @@ def importers():
         imported.write("print('Hello, I am imported!')")
         importer.write("print('Looks like I have imported some file')")
 
-def copying_function(input, output, line_number=None):
+def copying_function(input, output, start=0, finish=None):
     """
     Copies some amount of text from one file to another (all the text by default)
     :param input: input file (with path)
     :param output: output file (with path)
-    :param line_number: int - number of lines you want to copy
+    :param start: int - number of line you want to start with
+    :param finish: int - number of line you want to finish on
     :return: nothing
     """
     with open(input, "r") as i, open(output, "w") as o:
         content = i.readlines()
-        if not line_number:
-            line_number = len(content)
-        content = content[:line_number]
+        if not finish:
+            finish = len(content)
+        content = content[start:finish]
         for line in content:
             o.write(line)
 
