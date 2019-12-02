@@ -4,7 +4,6 @@ https://www.youtube.com/watch?v=wYPUhge9w5c
 And it encouraged me to actually code it. Which I did. And succedeed)
 """
 
-
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -36,7 +35,7 @@ for epoch in range(number_of_epochs):
     point = tuple((xx[pos], yy[pos]))
     regr_point = tuple((xx[pos], f(xx[pos], k, b)))
     x_dist = point[0]
-    y_dist =  point[1] - regr_point[1]
+    y_dist = point[1] - regr_point[1]
     k += x_dist*y_dist*learning_rate
     b += y_dist*learning_rate
     # plt.plot(xx, [f(x, k, b) for x in xx], color=str(1-epoch/number_of_epochs), zorder = -1)
