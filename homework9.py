@@ -170,7 +170,14 @@ def shaker(string):
     return " ".join(final)
 
 
-print(shaker("Напишите генератор, осуществляющий считывание фасты и возвращающий по 1-ой оттранслированной последовательности "))
+print(shaker("Good day, magistrate. My name is Arcturus Mengsk, and I represent the Sons of Korhal. You're familiar "
+             "with the Confederate propaganda surrounding my group, but your reputation suggests you'll see past it. "
+             "It's never been our practice to operate in any one place for long, but these Zerg don't look like they're"
+             " going to wait. I'm going to make you an offer, magistrate. I'd like to help you out by sending down a "
+             "number of transports to your colony and evacuating any survivors. You know, of course, that my "
+             "organization operates outside the bounds of Confederate law. That's why they spread their lies and"
+             " misinformation. If you decide to accept our help, you'll be branded as an outlaw too. But, it's a chance"
+             " to save those people. Time to make a stand, magistrate"))
 # monkey_sort_visualization()
 # array_creation()
 # random_numpy_comparison()
