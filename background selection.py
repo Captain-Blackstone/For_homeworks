@@ -107,14 +107,12 @@ def drift_background(now, N, m, next):
 y_drift = []
 y_background = []
 x = range(101)
-now = 15
+now = 70
 N = 100
 m = 10
 for i in range(N+1):
     y_background.append(drift_background(now, N, m, i))
     y_drift.append(pmf(now,  i, N))
-print(sum(y_drift))
-print(sum(y_background))
 plt.plot(x, y_drift, color="red", alpha=0.5, label="drift")
 plt.plot(x, y_background, color="blue", alpha=0.5, label="drift+background")
 plt.legend()
