@@ -181,10 +181,13 @@ def Smith_Waterman(file, match=1, mismatch=-1, gap=-1):
 
 
 
-fastq2fasta("sample.fastq", "sample.fasta")
-alignment = Needleman_Wunsch("sample.fasta")
-print(alignment[0])
-print(alignment[1])
-alignment = Smith_Waterman("sample.fasta")
+# fastq2fasta("sample.fastq", "sample.fasta")
+# alignment = Needleman_Wunsch("sample.fasta")
+# print(alignment[0])
+# print(alignment[1])
+# alignment = Smith_Waterman("sample.fasta")
+# print(alignment[0])
+# print(alignment[1])
+alignment = Smith_Waterman("gag.fasta")
 print(alignment[0])
 print(alignment[1])
