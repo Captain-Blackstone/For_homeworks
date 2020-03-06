@@ -2,6 +2,20 @@
 Hello, Sasha!
 Wecome to my first homework in this semester. I am not tired yet, so I can be sightly creative gere ;)
 """
+import matplotlib.pyplot as plt
+from itertools import combinations_with_replacement, product
+
+### Itertools part
+
+def pile():
+    values = [str(i) for i in range(2, 11)] + list("JDKA")
+    suits = ["Spades", "Hearts", "Clubs", "Diamonds"]
+    return list(product(values, suits))
+
+def seqs_of_n(n):
+    letters = list("ATGC")
+    return list(combinations_with_replacement(letters, n))
+
 
 "Found this dictionary here: https://gist.github.com/stepjue/b2e957215f4e5121fa14"
 codons = {
@@ -137,6 +151,72 @@ class RNAseq:
         translation_table = str.maketrans(input, output)
         return str.translate(self.seq, translation_table)
 
+class PositiveOnly(set):
+    def __init__(self, args_tuple):
+        super().__init__()
+        for argument in args_tuple:
+            self.add(argument)
+
+
+    def add(self, object):
+        if object > 0:
+            super().add(object)
+
+class Record:
+    def __init__(self, name="", seq=""):
+        self.name = name
+        self.seq = seq
+    def give_name(self, name):
+        self.name = name
+    def give_seq(self, seq):
+        self.seq = seq
+
+class FastaStatistics:
+    def __init__(self, path):
+        self.path = path
+        self.records = []
+        with open(path, "r") as fl:
+            lines = fl.readlines()
+        for line in lines:
+            if line.startswith(">"):
+                self.records.append(Record())
+                self.records[-1].give_name(line[1:].strip())
+            else:
+                self.records[-1].give_seq(line.strip())
+
+
+    def count_seqs(self):
+        return len(self.records)
+
+    def hist_lengths(self):
+        lengths = [len(record.seq) for record in self.records]
+        plt.hist(lengths, bins=len(lengths))
+        plt.show()
+
+    def gc_content(self):
+        all_seqs = "".join([records.seq for records in self.records])
+        return round((all_seqs.count("G") + all_seqs.count("C"))/len(all_seqs), 3)
+
+    def hist_4mers(self):
+        four_mers = ["".join(x) for x in combinations_with_replacement(["A", "T", "C", "G"], 4)]
+        counts = [sum([record.seq.count(four_mer) for record in self.records]) for four_mer in four_mers]
+        plt.hist(counts, bins = len(four_mers))
+        plt.show()
+
+    def __str__(self):
+        print(self.path)
+
+    def do_stats(self):
+        print("number of seqs: ", self.count_seqs())
+        print("GC-content: ", self.gc_content())
+        self.hist_lengths()
+        self.hist_4mers()
+
+fasta = FastaStatistics("/home/dmitry/Diploma/Scripts/Compensatory_frameshifts/5_Conserved_Sequence/for_ancestor_reconstruction/fasta/uc002zwv.1.fasta")
+fasta.do_stats()
+
+
+
 
 
 
@@ -157,3 +237,9 @@ Voldemort.make_stupid_mistake("Kill Harry Potter")
 my_rna = RNAseq("AUGUGGUGAUAA")
 print(my_rna.translate())
 print(my_rna.orf)
+
+positiver = PositiveOnly((3, -1, 4, 5))
+print(positiver)
+positiver.add(-5)
+positiver.add(10)
+print(positiver)
