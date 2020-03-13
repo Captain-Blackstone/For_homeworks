@@ -100,8 +100,6 @@ print(value_array.sum(), serie.sum())
 
 # Creating from scratch
 df = pd.DataFrame({"a":[1, 2, 3], "b": [101, 102, 103]})
-print(df)
-
 # Reading from file
 
 df = pd.read_csv("https://github.com/Serfentum/bf_course/raw/master/14.pandas/train.csv")
