@@ -3,7 +3,10 @@ Hello, Sasha!
 Wecome to my first homework in this semester. I am not tired yet, so I can be sightly creative gere ;)
 """
 import matplotlib.pyplot as plt
+import numpy as np
 from itertools import combinations_with_replacement, product
+from Bio import SeqIO
+from Bio.Data import CodonTable
 
 ### Itertools part
 
@@ -13,77 +16,12 @@ def pile():
     return list(product(values, suits))
 
 def seqs_of_n(n):
-    letters = list("ATGC")
-    return list(combinations_with_replacement(letters, n))
+    letters = "ATGC"
+    for i in range(1, n+1):
+        for element in product(*[letters]*i):
+            yield "".join(element)
 
-
-"Found this dictionary here: https://gist.github.com/stepjue/b2e957215f4e5121fa14"
-codons = {
-"UUU" : "F",
-"CUU" : "L",
-"AUU" : "I",
-"GUU" : "V",
-"UUC" : "F",
-"CUC" : "L",
-"AUC" : "I",
-"GUC" : "V",
-"UUA" : "L",
-"CUA" : "L",
-"AUA" : "I",
-"GUA" : "V",
-"UUG" : "L",
-"CUG" : "L",
-"AUG" : "M",
-"GUG" : "V",
-"UCU" : "S",
-"CCU" : "P",
-"ACU" : "T",
-"GCU" : "A",
-"UCC" : "S",
-"CCC" : "P",
-"ACC" : "T",
-"GCC" : "A",
-"UCA" : "S",
-"CCA" : "P",
-"ACA" : "T",
-"GCA" : "A",
-"UCG" : "S",
-"CCG" : "P",
-"ACG" : "T",
-"GCG" : "A",
-"UAU" : "Y",
-"CAU" : "H",
-"AAU" : "N",
-"GAU" : "D",
-"UAC" : "Y",
-"CAC" : "H",
-"AAC" : "N",
-"GAC" : "D",
-"UAA" : "Stop",
-"CAA" : "Q",
-"AAA" : "K",
-"GAA" : "E",
-"UAG" : "Stop",
-"CAG" : "Q",
-"AAG" : "K",
-"GAG" : "E",
-"UGU" : "C",
-"CGU" : "R",
-"AGU" : "S",
-"GGU" : "G",
-"UGC" : "C",
-"CGC" : "R",
-"AGC" : "S",
-"GGC" : "G",
-"UGA" : "Stop",
-"CGA" : "R",
-"AGA" : "R",
-"GGA" : "G",
-"UGG" : "W",
-"CGG" : "R",
-"AGG" : "R",
-"GGG" : "G"
-}
+codons = CodonTable.unambiguous_dna_by_name["Standard"]
 
 
 class DarkOverlord:
@@ -138,7 +76,7 @@ class RNAseq:
                 if codon in ("UAG", "UAA", "UGA"):
                     stop = True
                     break
-                aa_seq += codons[codon]
+                aa_seq += codons.forward_table[codon.replace("U", "T")]
         if start and stop:
             self.orf = True
         else:
@@ -198,9 +136,14 @@ class FastaStatistics:
         return round((all_seqs.count("G") + all_seqs.count("C"))/len(all_seqs), 3)
 
     def hist_4mers(self):
-        four_mers = ["".join(x) for x in combinations_with_replacement(["A", "T", "C", "G"], 4)]
+        four_mers = ["".join(x) for x in product(*["ATGC"]*4)]
         counts = [sum([record.seq.count(four_mer) for record in self.records]) for four_mer in four_mers]
-        plt.hist(counts, bins = len(four_mers))
+        fig = plt.figure()
+        axes = fig.add_subplot()
+        axes.hist(counts, bins=np.arange(len(four_mers))-0.5)
+        axes.set_xticks(list(range(len(four_mers))))
+        # print(list(range(len(four_mers))))
+        axes.set_xticklabels(four_mers, rotation=90)
         plt.show()
 
     def __str__(self):
@@ -212,7 +155,7 @@ class FastaStatistics:
         self.hist_lengths()
         self.hist_4mers()
 
-fasta = FastaStatistics("/home/dmitry/Diploma/Scripts/Compensatory_frameshifts/5_Conserved_Sequence/for_ancestor_reconstruction/fasta/uc002zwv.1.fasta")
+fasta = FastaStatistics("/home/dmitry/Diploma/Scripts/Compensatory_frameshifts/5_Conserved_Sequence/vertebrates/for_ancestor_reconstruction/fasta/uc002zwv.1.fasta")
 fasta.do_stats()
 
 
