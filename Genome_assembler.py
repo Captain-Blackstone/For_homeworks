@@ -1,6 +1,5 @@
 import numpy as np
 import networkx as nx
-from homework4 import flatten
 from collections import Counter
 import os
 
