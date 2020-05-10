@@ -207,8 +207,17 @@ def generate_genome(genome_length):
 # with open("simulated_genome.fasta", "w") as fl:
 #     fl.write(f">genome\n{genome}")
 
-records = Naive_assembler("simulated_reads.fasta", 5)
-print(f'The assembly ended in {len(records)} contigs')
-with open("assembled_genome.fasta", "w") as fl:
-    for record in records:
-        fl.write(f'>{record.id}\n{record.seq}\n')
+
+
+# records = Naive_assembler("simulated_reads.fasta", 5)
+# print(f'The assembly ended in {len(records)} contigs')
+# with open("assembled_genome.fasta", "w") as fl:
+#     for record in records:
+#         fl.write(f'>{record.id}\n{record.seq}\n')
+
+with open("simulated_genome.fasta", "r") as fl:
+    genome = fl.readlines()[-1].strip()
+reads = [str(read.seq) for read in SeqIO.parse("Unknown_assembled.fasta", "fasta")]
+print(genome)
+for read in reads:
+    print(local_align(genome, read)[-1].split("\n")[-1])
