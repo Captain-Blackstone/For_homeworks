@@ -2,6 +2,7 @@ import numpy as np
 import networkx as nx
 from collections import Counter
 import os
+from Bio import SeqIO
 
 def generate_genome(genome_length):
     genome = ""
@@ -33,6 +34,9 @@ def shotgun_sequencing(genome, mean_read_length, num_of_reads):
 
 def extract_kmers(reads, k):
     kmers = list()
+    mean_length = int(np.mean(np.array([len(read) for read in reads])))
+    if k > mean_length:
+        print(f"Warning. Your k is not optimal. Mean read length is {mean_length}")
     for read in reads:
         for i in range(len(read)-k+1):
             kmer = read[i:i+k]
@@ -51,6 +55,8 @@ def process_de_bruijn_graph(graph):
     edges = list(set(edges))
     froms = [edge[0] for edge in edges]
     candidates = [node for node in froms if froms.count(node) == 1]
+    if not candidates:
+        return graph
     falses = set()
     k = len(candidates[0]) + 1
     while len(candidates) != 0:
@@ -59,10 +65,7 @@ def process_de_bruijn_graph(graph):
         tos = [edge[0] for edge in edges]
         if tos.count(to) != 1:
             falses.add(candidate)
-        # if len(graph.nodes) > 2:
         graph = collapse_edge(graph, candidate, to, k)
-        # elif len(graph.nodes) == 2:
-        #     return graph
         edges = graph.edges
         edges = [(edge[0], edge[1]) for edge in edges]
         edges = list(set(edges))
@@ -79,7 +82,6 @@ def cut_off_tips(graph, k):
         candidate = None
     false = set()
     while candidate:
-        print("here")
         edges_of_interest = list(filter(lambda el: el[0] == candidate, edges))
         edges_of_interest = [(el[0], el[1]) for el in edges_of_interest]
         c = Counter(edges_of_interest)
@@ -119,7 +121,8 @@ def collapse_edge(graph, node1, node2, k):
         new_graph.add_edge(edge[0], edge[1])
     return new_graph
 
-def assembler(reads, k=30):
+def assembler(file_with_reads, k=30):
+    reads = [str(read.seq) for read in SeqIO.parse(file_with_reads, format=file_with_reads.split(".")[-1])]
     kmers = extract_kmers(reads, k)
     graph = generate_de_bruijn_graph(kmers)
     graph = process_de_bruijn_graph(graph)
@@ -138,15 +141,14 @@ def assembler(reads, k=30):
 
 ### TEST ###
 
-genome = generate_genome(1000)
-with open("simulated_genome.fasta", "w") as fl:
-    fl.write(f">genome\n{genome}")
+# genome = generate_genome(1000)
+# with open("simulated_genome.fasta", "w") as fl:
+#     fl.write(f">genome\n{genome}")
 
-reads = shotgun_sequencing(genome, 100, 100)
-with open("simulated_reads.fasta", "w") as fl:
-    i = 1
-    for read in reads:
-        fl.write(f">{i}\n{read}\n")
-        i += 1
-
-assembler(reads)
+# reads = shotgun_sequencing(genome, 100, 100)
+# with open("simulated_reads.fasta", "w") as fl:
+#     i = 1
+#     for read in reads:
+#         fl.write(f">{i}\n{read}\n")
+#         i += 1
+assembler("ATGTAGCTCC.fasta", 4)
