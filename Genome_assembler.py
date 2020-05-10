@@ -1,9 +1,67 @@
+import argparse
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 from collections import Counter
 import os
 from Bio import SeqIO
+
+def main():
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(dest="mode")
+    assemble = subparsers.add_parser(name="assemble")
+    assemble.add_argument("-i", "--input",
+                        required=True,
+                        type=str,
+                        help="Input file with reads in fasta or fastq format.")
+    #reads = [str(read.seq) for read in SeqIO.parse("xxx", format=file_with_reads.split(".")[-1])]
+    #mean_read_length = int(np.mean(np.array([len(read) for read in reads])))
+    assemble.add_argument("-o", "--output",
+                        required=True,
+                        type=str,
+                        help="Output file.")
+    assemble.add_argument("-k", "--KmerLength",
+                        default=30,
+                        type=int,
+                        help="Length of k-mers that will be used in assembly.")
+    simulate = subparsers.add_parser(name="simulate")
+    simulate.add_argument("-s", "--GenomeSize",
+                                default=10000,
+                                type=int,
+                                help="Size of genome to be simulated.")
+    simulate.add_argument("-n", "--NumberOfReads",
+                                default=1000,
+                                type=int,
+                                help="Number of reads to be simulated.")
+    simulate.add_argument("-l", "--MeanReadLength",
+                                default=100,
+                                type=int,
+                                help="Mean length of simulated reads.")
+    simulate.add_argument("-og", "--OutputGenome",
+                                default="Simulated_genome.fasta",
+                                type=str,
+                                help="File where simulated genome goes.")
+    simulate.add_argument("-or", "--OutputReads",
+                                default="Simulated_reads.fasta",
+                                type=str,
+                                help="File where simulated reads go.")
+    args = parser.parse_args()
+    if args.mode == "assemble":
+        assembler(file_with_reads=args.input, output_file=args.output, k=args.KmerLength)
+    elif args.mode == "simulate":
+        genome = generate_genome(args.GenomeSize)
+        with open(args.OutputGenome, "w") as fl:
+            fl.write(f">genome\n{genome}")
+        #
+        reads = shotgun_sequencing(genome,args.MeanReadLength, args.NumberOfReads)
+        with open(args.OutputReads, "w") as fl:
+            i = 1
+            for read in reads:
+                fl.write(f">{i}\n{read}\n")
+                i += 1
+        print("Simulation complete.")
+
+
 
 def flatten(lst):
     """
@@ -59,7 +117,10 @@ def extract_kmers(reads, k):
     kmers = list()
     mean_length = int(np.mean(np.array([len(read) for read in reads])))
     if k > mean_length:
-        print(f"Warning. Your k is not optimal. Mean read length is {mean_length}")
+        print(f"Warning. Your k (or defauld k=30) is not optimal. Mean read length is {mean_length}")
+        new_k = int(mean_length*0.8)
+        print(f"Prooceeding with k = {new_k}")
+        return new_k
     for read in reads:
         for i in range(len(read)-k+1):
             kmer = read[i:i+k]
@@ -82,16 +143,14 @@ def process_de_bruijn_graph(graph):
         return graph
     falses = set()
     k = len(candidates[0]) + 1
+    sum_of_progression = len(candidates)/0.37
+    i_threshold = sum_of_progression*0.05
+    current_work_done = 0
     while len(candidates) != 0:
-        print(len(candidates), "candidates")
         pairs_to_collapse = []
         untouchable = []
-        # candidate = candidates[0]
-        iii = 0
+        i = 0
         for candidate in candidates:
-            # iii += 1
-            # if not iii % 50:
-            #     print(iii)
             to = list(filter(lambda el: el[0] == candidate, edges))[0][1]
             tos = [edge[1] for edge in edges]
             if tos.count(to) != 1:
@@ -104,6 +163,12 @@ def process_de_bruijn_graph(graph):
                 additional_untouchable += [element[1] for element in filter(lambda el: el[0] == to, edges)]
                 untouchable += additional_untouchable
                 untouchable = list(set(untouchable))
+            i += 1
+            if i > i_threshold:
+                current_work_done += 5
+                print(current_work_done, "% of primary assembly is done")
+                i = 0
+
         ### This is for step-by-step visualisation. Green nodes - to be merged, red ones - not to be merged (untouchable) blue ones - never will be merged.
         # color_map = []
         # for node in graph:
@@ -121,9 +186,12 @@ def process_de_bruijn_graph(graph):
         edges = list(set(edges))
         froms = [edge[0] for edge in edges]
         candidates = list({node for node in froms if froms.count(node) == 1}.difference(falses))
+    if current_work_done < 100:
+        print("100 % of primary assembly is done")
     return graph
 
 def cut_off_tips(graph, k):
+    print("Cutting off tips... This shouldn't take long.")
     edges = list(graph.edges)
     if edges:
         candidate = edges[0][0]
@@ -153,7 +221,6 @@ def cut_off_tips(graph, k):
                     untouchable += additional_untouchable
                     untouchable = list(set(untouchable))
             else:
-                print(candidate)
                 false.add(candidate)
         ### Another visualization block
         # color_map = []
@@ -199,17 +266,20 @@ def collapse_edges(graph, pairs, k):
         new_graph.add_edge(edge[0], edge[1])
     return new_graph
 
-def assembler(file_with_reads, k=30):
+def assembler(file_with_reads, output_file, k):
     reads = [str(read.seq) for read in SeqIO.parse(file_with_reads, format=file_with_reads.split(".")[-1])]
     kmers = extract_kmers(reads, k)
+    if type(kmers) == int:
+        k = kmers
+        kmers = extract_kmers(reads, k)
     graph = generate_de_bruijn_graph(kmers)
     graph = process_de_bruijn_graph(graph)
     graph = cut_off_tips(graph, k=30)
     nx.nx_pydot.write_dot(graph, 'graph.dot')
-    os.system("dot -Tpng graph.dot > graph.png")
+    os.system(f"dot -Tpng graph.dot > {file_with_reads.split('.')[0]}.png")
     os.system("rm graph.dot")
     contigs = list(graph.nodes)
-    with open("Unknown_assembled.fasta", "w") as fl:
+    with open(output_file, "w") as fl:
         i = 0
         for contig in contigs:
             i += 1
@@ -219,14 +289,7 @@ def assembler(file_with_reads, k=30):
 
 ### TEST ###
 
-# genome = generate_genome(100)
-# with open("simulated_genome.fasta", "w") as fl:
-#     fl.write(f">genome\n{genome}")
 
-# reads = shotgun_sequencing(genome, 10, 100)
-# with open("simulated_reads.fasta", "w") as fl:
-#     i = 1
-#     for read in reads:
-#         fl.write(f">{i}\n{read}\n")
-#         i += 1
-assembler("unknown_harder.fasta", 30)
+# assembler("unknown_harder.fasta", 30)
+if __name__ == "__main__":
+    main()
