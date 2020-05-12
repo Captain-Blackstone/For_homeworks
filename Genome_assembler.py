@@ -3,10 +3,22 @@ import numpy as np
 import networkx as nx
 import logging
 from collections import Counter
-import os, sys
+import os,sys
 from Bio import SeqIO
 
 def main():
+    def initiate_logger(logger_name):
+        logging.basicConfig(filename=f"{logger_name}.log",
+                            filemode="w",
+                            format="%(message)s",
+                            level=logging.DEBUG)
+        logger = logging.getLogger(__name__)
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter(' %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        return logger
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="mode")
     assemble = subparsers.add_parser(name="assemble")
@@ -14,19 +26,17 @@ def main():
                         required=True,
                         type=str,
                         help="Input file with reads in fasta or fastq format.")
-    #reads = [str(read.seq) for read in SeqIO.parse("xxx", format=file_with_reads.split(".")[-1])]
-    #mean_read_length = int(np.mean(np.array([len(read) for read in reads])))
     assemble.add_argument("-o", "--output",
                         required=True,
                         type=str,
                         help="Output file.")
     assemble.add_argument("-k", "--KmerLength",
-                        default=30,
+                        default=70,
                         type=int,
                         help="Length of k-mers that will be used in assembly.")
     simulate = subparsers.add_parser(name="simulate")
     simulate.add_argument("-s", "--GenomeSize",
-                                default=10000,
+                                default=1000,
                                 type=int,
                                 help="Size of genome to be simulated.")
     simulate.add_argument("-n", "--NumberOfReads",
@@ -47,35 +57,48 @@ def main():
                                 help="File where simulated reads go.")
     args = parser.parse_args()
     if args.mode == "assemble":
-        logging.basicConfig(filename=f"{args.input.split('.')[0]}_assembly.log",
-                            filemode="w",
-                            format="%(message)s",
-                            level=logging.DEBUG)
-        logger = logging.getLogger(__name__)
-        handler = logging.StreamHandler(sys.stdout)
-        handler.setLevel(logging.DEBUG)
-        formatter = logging.Formatter(' %(message)s')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
+        logger = initiate_logger("Assemble")
+    # class Whatever:
+    #     def __init__(self, output,out_gen, out_reads, k, s, l, n):
+    #         self.input = out_reads
+    #         self.output = output
+    #         self.KmerLength = k
+    #         self.GenomeSize = s
+    #         self.MeanReadLength = l
+    #         self.NumberOfReads = n
+    #         self.OutputGenome = out_gen
+    #         self.OutputReads = out_reads
+    # args = Whatever("Assembly.fasta", "Simulated_genome.fasta","Simulated_reads.fasta", 80, 1000, 100, 100)
+    # genome = generate_genome(args.GenomeSize)
+    # with open(args.OutputGenome, "w") as fl:
+    #     fl.write(f">genome\n{genome}")
+    # logger.info("Running shotgun sequence...")
+    # reads = shotgun_sequencing(genome, args.MeanReadLength, args.NumberOfReads)
+    # with open(args.OutputReads, "w") as fl:
+    #     i = 1
+    #     for read in reads:
+    #         fl.write(f">{i}\n{read}\n")
+    #         i += 1
+    # logger.info("Simulation complete.")
+    # logger.info(f"Genome of size {args.GenomeSize} was generated.\n"
+    #             f"{args.NumberOfReads} reads were generated with mean length {args.MeanReadLength}.")
         assembler(file_with_reads=args.input, output_file=args.output, k=args.KmerLength, logger=logger)
     elif args.mode == "simulate":
-        logging.basicConfig(filename="Simulation.log",
-                            filemode="w",
-                            format="%(message)s",
-                            level=logging.DEBUG)
-        logger = logging.getLogger(__name__)
+        logger = initiate_logger("Simulate")
         logger.info("Generating genome...")
         genome = generate_genome(args.GenomeSize)
         with open(args.OutputGenome, "w") as fl:
             fl.write(f">genome\n{genome}")
         logger.info("Running shotgun sequence...")
-        reads = shotgun_sequencing(genome,args.MeanReadLength, args.NumberOfReads)
+        reads = shotgun_sequencing(genome, args.MeanReadLength, args.NumberOfReads)
         with open(args.OutputReads, "w") as fl:
             i = 1
             for read in reads:
                 fl.write(f">{i}\n{read}\n")
                 i += 1
         logger.info("Simulation complete.")
+        logger.info(f"Genome of size {args.GenomeSize} was generated.\n"
+                    f"{args.NumberOfReads} reads were generated with mean length {args.MeanReadLength}.")
 
 
 
@@ -106,7 +129,7 @@ def generate_genome(genome_length):
         genome += np.random.choice(list("ATGC"))
     return genome
 
-def shotgun_sequencing(genome, mean_read_length, num_of_reads):
+def shotgun_sequencing(genome, mean_read_length, num_of_reads, mut_prob=0.000):
     """
     Errors happen with rate 0.001
     :param genome: genome to sequence
@@ -132,9 +155,9 @@ def extract_kmers(reads, k, logger):
     kmers = list()
     mean_length = int(np.mean(np.array([len(read) for read in reads])))
     if k > mean_length:
-        logger.warning(f"Warning. Your k (or default k=30) is not optimal. Mean read length is {mean_length}")
-        new_k = int(mean_length*0.8)
-        logger.info(f"Prooceeding with k = {new_k}")
+        logger.warning(f"Warning. Your k (or default k=70) is not optimal. Mean read length is {mean_length}")
+        new_k = int(mean_length*0.7)
+        logger.info(f"Proceeding with k = {new_k}")
         return new_k
     for read in reads:
         for i in range(len(read)-k+1):
@@ -158,10 +181,11 @@ def process_de_bruijn_graph(graph, logger):
         return graph
     falses = set()
     k = len(candidates[0]) + 1
-    sum_of_progression = len(candidates)/0.37
+    sum_of_progression = len(candidates)/0.37 # this is totally empirical
     i_threshold = sum_of_progression*0.05
     current_work_done = 0
     while len(candidates) != 0:
+        logger.debug(f'Number of candidates - {len(candidates)}')
         pairs_to_collapse = []
         untouchable = []
         i = 0
@@ -184,7 +208,8 @@ def process_de_bruijn_graph(graph, logger):
                 logger.info(str(current_work_done) + " %")
                 i = 0
 
-        ### This is for step-by-step visualisation. Green nodes - to be merged, red ones - not to be merged (untouchable) blue ones - never will be merged.
+        ## This is for step-by-step visualisation. Green nodes - to be merged, red ones - not to be merged (untouchable) blue ones - never will be merged.
+        # import matplotlib.pyplot as plt
         # color_map = []
         # for node in graph:
         #     if node in flatten(pairs_to_collapse):
@@ -193,7 +218,7 @@ def process_de_bruijn_graph(graph, logger):
         #         color_map.append("red")
         #     else:
         #         color_map.append("blue")
-        # nx.draw(graph, node_color=color_map, with_labels=True)
+        # nx.draw(graph, node_color=color_map)
         # plt.show()
         graph = collapse_edges(graph, pairs_to_collapse, k)
         edges = graph.edges
@@ -247,7 +272,14 @@ def cut_off_tips(graph, k):
         #         color_map.append("blue")
         # nx.draw(graph, node_color=color_map, with_labels=True)
         # plt.show()
-        graph = collapse_edges(graph, pairs_to_collapse, k)
+        new_graph = collapse_edges(graph, pairs_to_collapse, k)
+        nodes_to_remove = set()
+        for node in new_graph:
+            if not new_graph.degree(node) and graph.degree(node):
+                nodes_to_remove.add(node)
+        for node in nodes_to_remove:
+            new_graph.remove_node(node)
+        graph=new_graph
         edges = list(graph.edges)
         possible_candidates = {edge[0] for edge in edges}.difference(false)
         if possible_candidates:
@@ -286,31 +318,32 @@ def assembler(file_with_reads, output_file, k, logger):
     kmers = extract_kmers(reads, k, logger)
     if type(kmers) == int:
         k = kmers
-        logger.info(f"Extracting k-mers with k = {k}")
+        logger.info(f"Extracting k-mers...")
         kmers = extract_kmers(reads, k, logger)
     logger.info("Done")
     graph = generate_de_bruijn_graph(kmers)
     logger.info("Processing graph...")
     graph = process_de_bruijn_graph(graph, logger)
     logger.info("Done")
-    logger.info("Cutting off tips...")
-    graph = cut_off_tips(graph, k=30)
-    logger.info("Done")
+    logger.debug(f"Number of contigs = {len(graph.nodes)}")
     nx.nx_pydot.write_dot(graph, 'graph.dot')
     os.system(f"dot -Tpng graph.dot > {file_with_reads.split('.')[0]}.png")
     os.system("rm graph.dot")
+    logger.info("Cutting off tips...")
+    graph = cut_off_tips(graph, k=k)
+    logger.debug(f"Number of contigs = {len(graph.nodes)}")
+    logger.info("Done")
     contigs = list(graph.nodes)
+    contig_lengths = sorted([len(contig) for contig in contigs], reverse=True)
     with open(output_file, "w") as fl:
         i = 0
         for contig in contigs:
             i += 1
             fl.write(f">{i}\n{contig}\n")
     logger.info(f"Congradulations! Your genome is assembled. {len(contigs)} contigs were generated.")
+    logger.info(f"Lengths of contigs: {', '.join(list(map(str, contig_lengths)))}")
+    if len(contig) >= len(reads):
+        logger.warning("Looks like something went wrong with your assembly.")
 
-
-### TEST ###
-
-
-# assembler("unknown_harder.fasta", 30)
 if __name__ == "__main__":
     main()

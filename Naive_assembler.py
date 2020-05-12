@@ -215,9 +215,9 @@ def generate_genome(genome_length):
 #     for record in records:
 #         fl.write(f'>{record.id}\n{record.seq}\n')
 
-with open("simulated_genome.fasta", "r") as fl:
+with open("Simulated_genome.fasta", "r") as fl:
     genome = fl.readlines()[-1].strip()
-reads = [str(read.seq) for read in SeqIO.parse("Unknown_assembled.fasta", "fasta")]
+reads = [str(read.seq) for read in SeqIO.parse("Assembly.fasta", "fasta")]
 print(genome)
 for read in reads:
     print(local_align(genome, read)[-1].split("\n")[-1])
