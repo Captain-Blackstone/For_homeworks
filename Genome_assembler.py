@@ -1,7 +1,7 @@
 import argparse
 import numpy as np
 import networkx as nx
-import matplotlib.pyplot as plt
+import logging
 from collections import Counter
 import os
 from Bio import SeqIO
@@ -47,19 +47,30 @@ def main():
                                 help="File where simulated reads go.")
     args = parser.parse_args()
     if args.mode == "assemble":
-        assembler(file_with_reads=args.input, output_file=args.output, k=args.KmerLength)
+        logging.basicConfig(filename=f"{args.input.split('.')[0]}_assembly.log",
+                            filemode="w",
+                            format="%(message)s",
+                            level=logging.DEBUG)
+        logger = logging.getLogger(__name__)
+        assembler(file_with_reads=args.input, output_file=args.output, k=args.KmerLength, logger=logger)
     elif args.mode == "simulate":
+        logging.basicConfig(filename=f"{args.input.split('.')[0]}_simulation.log",
+                            filemode="w",
+                            format="%(message)s",
+                            level=logging.DEBUG)
+        logger = logging.getLogger(__name__)
+        logger.info("Generating genome...")
         genome = generate_genome(args.GenomeSize)
         with open(args.OutputGenome, "w") as fl:
             fl.write(f">genome\n{genome}")
-        #
+        logger.info("Running shotgun sequence...")
         reads = shotgun_sequencing(genome,args.MeanReadLength, args.NumberOfReads)
         with open(args.OutputReads, "w") as fl:
             i = 1
             for read in reads:
                 fl.write(f">{i}\n{read}\n")
                 i += 1
-        print("Simulation complete.")
+        logger.info("Simulation complete.")
 
 
 
@@ -83,7 +94,6 @@ def flatten(lst):
         return flatten(result)
     else:
         return result
-
 
 def generate_genome(genome_length):
     genome = ""
@@ -113,13 +123,13 @@ def shotgun_sequencing(genome, mean_read_length, num_of_reads):
         reads.append("".join(read))
     return reads
 
-def extract_kmers(reads, k):
+def extract_kmers(reads, k, logger):
     kmers = list()
     mean_length = int(np.mean(np.array([len(read) for read in reads])))
     if k > mean_length:
-        print(f"Warning. Your k (or defauld k=30) is not optimal. Mean read length is {mean_length}")
+        logger.warning(f"Warning. Your k (or default k=30) is not optimal. Mean read length is {mean_length}")
         new_k = int(mean_length*0.8)
-        print(f"Prooceeding with k = {new_k}")
+        logger.info(f"Prooceeding with k = {new_k}")
         return new_k
     for read in reads:
         for i in range(len(read)-k+1):
@@ -133,7 +143,7 @@ def generate_de_bruijn_graph(kmers):
         graph.add_edge(kmer[:-1], kmer[1:])
     return graph
 
-def process_de_bruijn_graph(graph):
+def process_de_bruijn_graph(graph, logger):
     edges = graph.edges
     edges = [(edge[0], edge[1]) for edge in edges]
     edges = list(set(edges))
@@ -166,7 +176,7 @@ def process_de_bruijn_graph(graph):
             i += 1
             if i > i_threshold:
                 current_work_done += 5
-                print(current_work_done, "% of primary assembly is done")
+                logger.info(current_work_done, "%")
                 i = 0
 
         ### This is for step-by-step visualisation. Green nodes - to be merged, red ones - not to be merged (untouchable) blue ones - never will be merged.
@@ -187,11 +197,10 @@ def process_de_bruijn_graph(graph):
         froms = [edge[0] for edge in edges]
         candidates = list({node for node in froms if froms.count(node) == 1}.difference(falses))
     if current_work_done < 100:
-        print("100 % of primary assembly is done")
+        logger.info("100 %")
     return graph
 
 def cut_off_tips(graph, k):
-    print("Cutting off tips... This shouldn't take long.")
     edges = list(graph.edges)
     if edges:
         candidate = edges[0][0]
@@ -266,15 +275,22 @@ def collapse_edges(graph, pairs, k):
         new_graph.add_edge(edge[0], edge[1])
     return new_graph
 
-def assembler(file_with_reads, output_file, k):
+def assembler(file_with_reads, output_file, k, logger):
     reads = [str(read.seq) for read in SeqIO.parse(file_with_reads, format=file_with_reads.split(".")[-1])]
-    kmers = extract_kmers(reads, k)
+    logger.info("Extracting k-mers...")
+    kmers = extract_kmers(reads, k, logger)
     if type(kmers) == int:
         k = kmers
-        kmers = extract_kmers(reads, k)
+        logger.info(f"Extracting k-mers with k = {k}")
+        kmers = extract_kmers(reads, k, logger)
+    logger.info("Done")
     graph = generate_de_bruijn_graph(kmers)
-    graph = process_de_bruijn_graph(graph)
+    logger.info("Processing graph...")
+    graph = process_de_bruijn_graph(graph, logger)
+    logger.info("Done")
+    logger.info("Cutting off tips...")
     graph = cut_off_tips(graph, k=30)
+    logger.info("Done")
     nx.nx_pydot.write_dot(graph, 'graph.dot')
     os.system(f"dot -Tpng graph.dot > {file_with_reads.split('.')[0]}.png")
     os.system("rm graph.dot")
@@ -284,7 +300,7 @@ def assembler(file_with_reads, output_file, k):
         for contig in contigs:
             i += 1
             fl.write(f">{i}\n{contig}\n")
-    print(f"Congradulations! Your genome is assembled. {len(contigs)} contigs were generated.")
+    logger.info(f"Congradulations! Your genome is assembled. {len(contigs)} contigs were generated.")
 
 
 ### TEST ###
