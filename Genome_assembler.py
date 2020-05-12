@@ -3,7 +3,7 @@ import numpy as np
 import networkx as nx
 import logging
 from collections import Counter
-import os
+import os, sys
 from Bio import SeqIO
 
 def main():
@@ -52,9 +52,14 @@ def main():
                             format="%(message)s",
                             level=logging.DEBUG)
         logger = logging.getLogger(__name__)
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter(' %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
         assembler(file_with_reads=args.input, output_file=args.output, k=args.KmerLength, logger=logger)
     elif args.mode == "simulate":
-        logging.basicConfig(filename=f"{args.input.split('.')[0]}_simulation.log",
+        logging.basicConfig(filename="Simulation.log",
                             filemode="w",
                             format="%(message)s",
                             level=logging.DEBUG)
@@ -176,7 +181,7 @@ def process_de_bruijn_graph(graph, logger):
             i += 1
             if i > i_threshold:
                 current_work_done += 5
-                logger.info(current_work_done, "%")
+                logger.info(str(current_work_done) + " %")
                 i = 0
 
         ### This is for step-by-step visualisation. Green nodes - to be merged, red ones - not to be merged (untouchable) blue ones - never will be merged.
