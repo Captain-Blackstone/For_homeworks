@@ -51,7 +51,7 @@ def initiate_parser():
     parser.add_argument("-k", "--kernel",
                         required=True,
                         type=str,
-                        help="Name of file with a kernel")
+                        help="Name of file with a kernel. Kernel should be written in a form you would write in in python file - with square brackerts and commas. Newline characters are allowed.")
     args = parser.parse_args()
     image = plt.imread(args.image).mean(2)
     kernel = parse_kernel_file(args.kernel)
