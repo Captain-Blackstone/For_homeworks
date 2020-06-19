@@ -8,7 +8,7 @@ import imageio
 
 
 def convolve(image, kernel):
-    if kernel.shape[0] != kernel.shape[1]:
+    if kernel.shape[0] != kernel.shape[1] or not kernel.shape % 2:
         print("Wrong kernel size! Exiting")
         return None
     n = kernel.shape[0]
